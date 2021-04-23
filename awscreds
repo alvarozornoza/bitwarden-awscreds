@@ -1,0 +1,41 @@
+#!/bin/bash
+
+##################################################
+# Bash script to source credentials from bitwarden
+##################################################
+
+pflag=false
+
+while getopts "p:" opt; do
+	case $opt in
+		p ) profile=$OPTARG; pflag=true;;
+		\? ) echo 'Invalid argument, or argument value!'
+             exit 1;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
+if ! $pflag
+then
+    echo "-p is missing!"
+    exit 1
+fi
+
+username=$(bw get username cli_$profile)
+rc1=$?
+
+if [ $rc1 -ne 0 ]; then
+	echo "Issue with Bitwarden CLI in get username!"
+	exit 1
+fi
+
+password=$(bw get password cli_$profile)
+rc2=$?
+
+if [ $rc2 -ne 0 ]; then
+	echo "Issue with Bitwarden CLI in get password!"
+	exit 1
+fi
+
+echo "{\"Version\": 1, \"AccessKeyId\": \"$username\", \"SecretAccessKey\": \"$password\"}"
